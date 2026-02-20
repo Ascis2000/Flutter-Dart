@@ -1,0 +1,220 @@
+
+lib/
+├── main.dart                # Punto de entrada de la app
+├── screens/                 # Todas las pantallas de la app
+│   ├── intro_screen.dart    # Pantalla de bienvenida
+│   ├── home_screen.dart     # Pantalla principal con películas de TMDB
+│   ├── my_list_screen.dart  # Pantalla de lista personal (Hive)
+│   └── main_screen.dart     # Pantalla con BottomNavigationBar que gestiona Home/MyList
+│
+├── widgets/                 # Widgets reutilizables
+│   ├── movie_card.dart      # Tarjeta de película (HomeScreen + MyListScreen)
+│   ├── main_drawer.dart     # Drawer reutilizable con tema, limpiar lista e info
+│   └── ...otros widgets...  # Botones, loaders, etc.
+│
+├── models/                  # Modelos de datos
+│   ├── movie.dart           # Modelo Movie
+│   └── movie.g.dart         # Archivo generado por Hive
+│
+├── services/                # Lógica de negocio / API / base de datos
+│   ├── api_service.dart     # Consumo de TMDB
+│   ├── hive_service.dart    # Operaciones sobre Hive (añadir/eliminar)
+│   └── ...otros servicios...
+│
+├── theme/                   # Configuración visual global
+│   ├── app_theme.dart       # Colores, TextStyles, temas
+│   └── ...otros temas...
+│
+└── utils/                   # Funciones auxiliares / constantes
+    ├── constants.dart       # URLs, claves, estilos, colores
+    └── helpers.dart         # Funciones auxiliares generales
+
+
+/* ***************************************************** */
+
+MAIN
+    main.dart -> Inicializa Hive y lanza MainScreen
+    - Arranca la app.
+    - Inicializa Hive y abre las boxes (my_movies y settings).
+    - Carga el tema guardado en settingsBox y asigna a themeNotifier.
+    - Llama a runApp(MyApp()).
+
+
+
+SCREENS
+    intro_screen.dart -> Muestra mensaje de cargando datos
+    - Primera pantalla que ve el usuario.
+    - Muestra un mensaje de cargando o animación.
+    - Realiza tareas iniciales si es necesario (preload de datos, assets, etc.).
+    - Tras finalizar la carga, navega automáticamente a MainScreen
+
+    main_screen.dart -> Contiene BottomNavigationBar y cambia entre Home y Mi Lista
+    - Pantalla principal que contiene el BottomNavigationBar.
+    - Controla qué pantalla mostrar según _selectedIndex:
+    - 0 → HomeScreen (películas de TMDB): home_screen.dart
+    - 1 → MyListScreen (lista personal guardada en Hive): my_list_screen.dart
+    - Cada vez que el usuario selecciona otra pestaña, el body se actualiza
+    - Drawer con:
+        Selector de tema (Light / Dark / System)
+        Limpiar lista de películas
+        Información de la app
+
+    home_screen.dart -> Muestra GridView con películas populares de TMDB
+    - Obtiene las películas desde TMDB mediante ApiService.
+    - Muestra las películas en un GridView usando el widget MovieCard.
+    - Permite al usuario añadir películas a la lista personal, usando HiveService.addMovie.
+
+    my_list_screen.dart -> Muestra la lista personal almacenada en Hive, permite eliminar
+    - Obtiene la lista de películas guardadas en Hive.
+    - Muestra las películas en MovieCard con opción de eliminar o editar (opcional).
+    - Actualiza la UI automáticamente cuando la box de Hive cambia.
+
+
+RESUMEN:
+main.dart
+ └─> MyApp
+      └─> MaterialApp
+           └─> IntroScreen (Intro / Cargando)
+                └─> MainScreen (BottomNavigationBar)
+                     ├─ index 0 → HomeScreen (GridView TMDB)
+                     └─ index 1 → MyListScreen (Lista Hive)
+
+------------------------------------------------------------------
+
+WIDGETS
+    main_drawer.dart -> Drawer reutilizable con configuración y opciones de información
+    - Widget Drawer permite para toda la app:
+        Cambiar tema de la app (Claro / Oscuro / Sistema) → llama a onThemeChanged y actualiza themeNotifier + Hive.
+        Limpiar lista personal de películas → llama a onClearList que ejecuta HiveService.clearMovies.
+        Mostrar información de la app → muestra un AboutDialog.
+    - Se utiliza en:
+        MainScreen → como menú lateral para configuración e info.
+    
+    movie_card.dart -> Widget reutilizable para mostrar información de una película y botones de acción
+    - Widget reutilizable para mostrar información de una película.
+    - Muestra: imagen de portada, título y año.
+    - Contiene botones de acción:
+    - Añadir a la lista personal → llama a HiveService.addMovie.
+    - Eliminar de la lista personal → llama a HiveService.deleteMovie.
+    - Se utiliza en:
+        HomeScreen → para películas de TMDB.
+        MyListScreen → para películas guardadas en Hive.
+
+
+SERVICES
+    api_service.dart -> Llama a TMDB y devuelve lista de objetos Movie
+    - Conecta con la API de TMDB y obtiene películas.
+    - Devuelve lista de objetos Movie.
+    - Se usa en:
+        HomeScreen → para mostrar películas populares.
+
+    hive_service.dart -> CRUD sobre Hive (añadir, eliminar, listar películas)
+    - Gestiona la persistencia local usando Hive.
+    - addMovie(movie) → guarda película en la box my_movies.
+    - deleteMovie(movie) → elimina película de la box.
+    - getMovies() → devuelve la lista completa de películas guardadas.
+    - Se usa en:
+        MovieCard → para añadir/eliminar películas.
+        MyListScreen → para mostrar la lista completa de películas guardadas.
+
+
+MODELS
+    movie.dart -> Modelo de datos Movie con anotaciones Hive
+    - Modelo de datos Movie.
+    - Propiedades típicas: id, title, year, posterPath, overview, rating.
+    - Anotaciones Hive: @HiveType(typeId: X) y @HiveField(n) para permitir persistencia.
+    - Se usa en:
+        ApiService → para mapear JSON de TMDB a objetos Movie.
+        HiveService → para guardar y recuperar objetos.
+        MovieCard → para mostrar información en UI.
+
+    movie.g.dart -> Archivo generado por Hive para la persistencia
+    - Archivo generado automáticamente por Hive.
+    - Maneja la serialización/deserialización de Movie.
+    - Se usa en:
+        HiveService → para operaciones CRUD sobre la box.
+
+
+THEMES
+    app_theme.dart -> Define colores, tipografías y estilos globales y temas claros/oscuro/sistema
+    - Define colores, tipografías y estilos globales de la app.
+    - Temas:
+        lightTheme → tema claro con colores primarios y fondo específico.
+        darkTheme → tema oscuro con colores adaptados.
+        systemTheme → calculado dinámicamente en main.dart según brillo del sistema.
+    - Configuraciones específicas:
+        AppBarTheme, CardTheme, SnackBarTheme, BottomNavigationBarTheme.
+    - Se usa en:
+        main.dart → para asignar el tema según themeNotifier y ThemeMode.
+
+
+/* ***************************************************** */
+
+Funcionalidad de la app: My Movies App
+La app muestra una lista de exploración de películas obtenidas desde The Movie DB.
+Cada película se presenta con imagen de portada, título y año.
+Las películas se muestran en tarjetas visuales en un grid o lista.
+
+Crear lista personal
+El usuario puede seleccionar películas que le interesen y añadirlas a su lista personal.
+Esta lista se guarda localmente en el dispositivo para acceso rápido.
+
+Gestión de la lista personal (CRUD)
+Añadir: incluir nuevas películas desde la lista de exploración.
+Eliminar: quitar películas de la lista personal.
+Editar (opcional): cambiar información local (por ejemplo, añadir notas o etiquetas propias).
+Visualizar: ver todas las películas que ha guardado en su lista personal.
+
+Interacción y feedback
+Al añadir una película, el usuario recibe un mensaje de confirmación (SnackBar).
+La app actualiza automáticamente la lista personal sin necesidad de reiniciar.
+
+Persistencia
+Todo lo que el usuario guarda en su lista permanece aunque cierre la app, gracias al almacenamiento local (Hive).
+
+Escalabilidad
+La app puede crecer conectándose a más películas de The Movie DB.
+La lista personal puede contener cualquier cantidad de películas y organizarse según preferencias futuras (carpetas, etiquetas, filtros).
+
+
+PASO A PASO
+===========
+    DIA 1
+    - Crear proyecto Flutter
+    - Instalar dependencias (Hive, HTTP)
+    - Crear modelo Movie y generar movie.g.dart
+    - Crear HomeScreen básico para que compile y arranque
+    - Inicializar Hive en main.dart
+    - Mostrar HomeScreen con películas desde The Movie DB
+    - Mostrar HomeScreen con películas que cargan dinamicamente de 20 en 20
+
+    DIA 2
+    - Revisar funcionalidad
+    - Dropdown de selección de tema en Drawer con tres opciones: Claro, Oscuro, Sistema.
+    - Crear documentación de la app
+
+    DIA 3
+    - Definir estilos de cada tema light y dark
+    - Rediseñar estilos de movie_screen y aspectos generales
+    - Seguir creando documentación de la app
+
+    DIA 4
+    - Implementar Drawer global en widget aparte
+    - Añadir búsqueda por género
+    - Implementar filtros/ordenación en HomeScreen
+    - Seguir creando documentación de la app
+
+    DIA 5
+    - Mejorar filtros para genero y año
+    - Finalizar documentacion
+    - Subir a GitHub
+
+
+Pulido y detalles finales
+- Botón de búsqueda
+- Mejorar UI/UX (cards, imágenes, animaciones)
+- Mensajes y SnackBars
+- Validaciones y manejo de errores
+- Testing básico de funcionalidades
+
+/* *************************************** */
