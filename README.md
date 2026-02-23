@@ -3,6 +3,7 @@
 
 Aplicación Flutter para gestionar, valorar y comentar películas.
 
+# Estructura
 lib/
 ├── main.dart                # Punto de entrada de la app
 ├── screens/                 # Todas las pantallas de la app
@@ -10,25 +11,20 @@ lib/
 │   ├── home_screen.dart     # Pantalla principal con películas de TMDB
 │   ├── my_list_screen.dart  # Pantalla de lista personal (Hive)
 │   └── main_screen.dart     # Pantalla con BottomNavigationBar que gestiona Home/MyList
-│
 ├── widgets/                 # Widgets reutilizables
 │   ├── movie_card.dart      # Tarjeta de película (HomeScreen + MyListScreen)
 │   ├── main_drawer.dart     # Drawer reutilizable con tema, limpiar lista e info
 │   └── ...otros widgets...  # Botones, loaders, etc.
-│
 ├── models/                  # Modelos de datos
 │   ├── movie.dart           # Modelo Movie
 │   └── movie.g.dart         # Archivo generado por Hive
-│
 ├── services/                # Lógica de negocio / API / base de datos
 │   ├── api_service.dart     # Consumo de TMDB
 │   ├── hive_service.dart    # Operaciones sobre Hive (añadir/eliminar)
 │   └── ...otros servicios...
-│
 ├── theme/                   # Configuración visual global
 │   ├── app_theme.dart       # Colores, TextStyles, temas
 │   └── ...otros temas...
-│
 └── utils/                   # Funciones auxiliares / constantes
     ├── constants.dart       # URLs, claves, estilos, colores
     └── helpers.dart         # Funciones auxiliares generales
